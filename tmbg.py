@@ -1,6 +1,17 @@
+import hashlib
 import os
 
 import requests
+
+html_escape_table = {
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&apos;",
+    ">": "&gt;",
+    "<": "&lt;",
+    }
+def html_escape(text):
+    return "".join(html_escape_table.get(c,c) for c in text)
 
 out_dir = "tmbg"
 if not os.path.exists(out_dir):
@@ -39,7 +50,7 @@ print "Found %i tabs!" % len(titles)
 for title in titles:
     print title
 
-    filename = "%s/%s.html" % (out_dir, title)
+    filename = "%s/%s.html" % (out_dir, hashlib.sha1(title).hexdigest())
     if not os.path.exists(filename):
         params = dict(action = "raw", title = "Guitar Tab:" + title)
         g = requests.get("http://tmbw.net/wiki/index.php", params=params)
@@ -51,7 +62,9 @@ for title in titles:
 
 out = "<meta charset='utf-8'><ul>"
 for title in titles:
-    out += "<li><a href='%s.html'>%s</a></li>" % (title, title)
+    h = hashlib.sha1(title).hexdigest()
+    escaped_title = html_escape(title)
+    out += "<li><a href='%s.html'>%s</a></li>" % (h, escaped_title)
 out += "</ul>"
             
 with open("%s/index.html" % out_dir, 'w') as f:
